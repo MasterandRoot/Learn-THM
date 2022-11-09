@@ -1,0 +1,109 @@
+## Linux基础
+### Linux基础 part.1
+- Linux背景
+- Linux终端(terminal)命令
+  - `echo`
+  - `whoami`
+- 文件系统常见命令
+  - `ls`
+  - `cd`
+  - `cat` 查看文件内容
+    - `cat example.txt`
+  - `pwd` 当前工作路径
+- 搜索文件
+  - `find`
+    - `find -name password.txt`
+    - `find -name *.txt`
+  - `grep` 查询内容
+    - `wc` 计算字数、行数等
+    - `grep "126.64.33.54" access.log`
+- shell运算符
+  - `&` 在终端后台运行命令
+    - 例如在复制大文件的时候，可以后台运行
+  - `&&` 组合多个命令
+    - `command1 && command2`
+    - 只有在conmmand1运行成功时，才会运行command2
+  - `>` 重定向，从命令中获取输出并定向到其他地方
+    - `echo hey > 1.txt`
+  - `>>` 重定向，但不会覆盖原文件
+    - `echo hello >> 1.txt`
+### Linux基础 part.2
+- 命令参数
+  - `command --help`
+  - `man command` 查看手册页
+- 文件系统进阶命令
+  - `touch` 创建文件
+  - `mkdir` 创建文件夹
+  - `cp` 复制
+  - `mv` 剪切，重命名
+  - `rm` 删除
+    - `rm -R` 删除文件夹
+  - `file` 确定文件类型
+- 权限(Permissions)101
+  - `su -l user` 
+    - 这个参数加了之后，就好像是重新 login 为该使用者一样，大部份环境变数（HOME SHELL USER等等）都是以该使用者（USER）为主，并且工作目录也会改变。
+    - 如果没有指定 USER ，内定是 root
+  - 权限详解(链接)
+
+- 公共目录
+  - `/etc`
+    - 最重要的根目录之一
+    - 存储的系统文件
+    - `passwd`和`shadow`文件所在位置
+  - `/var`
+    - var是数据变量的缩写
+    - 存储系统上运行的服务或应用程序经常访问或写入的数据
+      - 来自正在运行的服务和应用程序的日志文件被写入此处`/var/log`
+  - `/root`
+    - 是root用户的主目录
+  - `/tmp`
+    - 该目录是易失的，用于存储只需要访问一次或两次的数据。
+    - 一旦计算机重新启动，此文件夹的内容就会被清除。
+    - **在渗透测试中对我们有用的是，默认情况下任何用户都可以写入此文件夹。这意味着一旦我们可以访问一台机器，它就可以作为存储我们的枚举脚本之类的东西的好地方。**
+### Linux基础 part.3
+- 终端文本编辑器
+  - vim(链接)
+- 实用软件
+  - `wget` 下载程序、脚本甚至图片等
+    - `wget https://example.com/example.txt`
+  - `scp` 使用SSH在两台终端间传输文件
+    - `scp important.txt ubuntu@192.168.1.30:/home/ubuntu/transferred.txt`
+    - `scp ubuntu@192.168.1.30:/home/ubuntu/documents.txt notes.txt` 
+  - 轻量级Web服务
+    - `python3 -m http.server`
+- 进程101
+  - `ps`
+    - 查看其他用户的进程和系统进程，使用 `ps aux`
+    - `top` 进程的实时统计信息
+  - `kill` 终止进程
+  - 进程如何开始
+    - 系统启动时，`systemd`是最先启动的进程之一
+    - 之后的所有进程都是`systemd`的子进程
+  - `systemctl`
+    - `systemctl [option] [service]`
+      - `systemctl start apache2`
+      - 常见`[option]`
+        - `start` 启动
+        - `stop` 停止
+        - `enable` 开机启动
+        - `disable` 关闭开机启动
+        - `restart` 重启
+        - `reload` 重新加载文件
+        - `status` 状态
+  - 前台和后台
+    - `&` 命令在后台运行
+    - `CTRL+Z` 将正在前台执行的命令放到后台，并且暂停
+    - `jobs` 查看有多少在后台运行的命令
+    - `fg %number` 将后台中的命令调至前台继续运行
+    - `bg %number` 将一个在后台暂停的命令，变成继续执行
+- 自动化（自启动）
+  - 文件在 `/etc/crontab`
+  - 使用 [Crontab生成器](https://crontab-generator.org/) 快速友好的生成
+- 软件更新
+  - `/etc/apt/sources.list` 
+- 系统日志
+  - `/var/log`
+
+### Linux扩展
+- [Bash脚本](https://github.com/MasterandRoot/Learn-THM/blob/main/Bash%20Scripting.md)
+- [正则表达式]()
