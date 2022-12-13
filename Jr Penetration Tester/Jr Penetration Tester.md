@@ -139,14 +139,14 @@
   - 访问 `http://online-service.thm/profile?user_id=1305`,能够访问用户个人信息
   - 尝试 `http://online-service.thm/profile?user_id=1000`,能够访问其他用户的个人信息
 - 编码中寻找IDORs
-  ![编码](https://tryhackme-images.s3.amazonaws.com/user-uploads/5efe36fb68daf465530ca761/room-content/5f2cbe5c4ab4a274420bc9a9afc9202d.png)
+  ![编码](image/编码.png)
 - 哈希中寻找IDORs
   - hash碰撞
 - 在不可预测里寻找IDORs
   - 如果上述两种方法无法检查到ID,则一种优秀的方式是申请两个账户并在他们之间交换ID,以此寻找IDOR漏洞。
 ### File Inclusion（文件包含）
 - 简介
-  ![文件包含示例](https://tryhackme-images.s3.amazonaws.com/user-uploads/5d617515c8cd8348d0b4e68f/room-content/dc22709e572d5de31ed4effb2ebc161f.png)
+  ![文件包含示例](image/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E7%A4%BA%E4%BE%8B.png)
   - 文件包含成因
     - 主要原因是未输入验证。用户输入未经验证审核。
   - 影响
@@ -155,7 +155,7 @@
 - 路径遍历
   - 也被成为目录遍历
   - 示例
-  ![目录遍历示例](https://tryhackme-images.s3.amazonaws.com/user-uploads/5d617515c8cd8348d0b4e68f/room-content/45d9c1baacda290c1f95858e27f740c9.png)
+  ![目录遍历示例](image/%E7%9B%AE%E5%BD%95%E9%81%8D%E5%8E%86%E7%A4%BA%E4%BE%8B.png)
   - 上述也被称为 `dot-dot-slash` 攻击
   - 利用 `../` 
   - 常见的系统文件
@@ -178,12 +178,12 @@
   - 关键字替换
     - php的匹配规则
 
-    ![php匹配规则](https://tryhackme-images.s3.amazonaws.com/user-uploads/5d617515c8cd8348d0b4e68f/room-content/30d3bf0341ba99485c5f683a416a056d.png)
+    ![php匹配规则](image/php%E5%8C%B9%E9%85%8D%E8%A7%84%E5%88%99.png)
 - RFI(远程文件包含)
   - php打开 `allow_url_fopen` 选项
   - RFI示例
 
-  ![RFI示例](https://tryhackme-images.s3.amazonaws.com/user-uploads/5d617515c8cd8348d0b4e68f/room-content/b0c2659127d95a0b633e94bd00ed10e0.png)
+  ![RFI示例](image/RFI%E7%A4%BA%E4%BE%8B.png)
 - FI防范建议
   - 更新最新版本
   - 关闭后端错误提醒
@@ -224,23 +224,23 @@
 - SSRF示例
   - 示例1
 
-  ![SSRF示例1](https://static-labs.tryhackme.cloud/sites/ssrf-examples/images/ssrf_1.png)
+    ![SSRF示例1](https://static-labs.tryhackme.cloud/sites/ssrf-examples/images/ssrf_1.png)
     - 请求完整的url时，把url更改为攻击载荷url
   - 示例2
 
-  ![SSRF示例2](https://static-labs.tryhackme.cloud/sites/ssrf-examples/images/ssrf_2.png)
+    ![SSRF示例2](https://static-labs.tryhackme.cloud/sites/ssrf-examples/images/ssrf_2.png)
     - 示例显示了攻击者如何仅通过利用目录遍历来控制路径仍然可以到达 `/api/user` 页面。 
     - 当 website.thm 收到 `../` 时，这是一条向上移动目录的消息，该目录删除请求的 `/stock` 部分并将最终请求变为 `/api/user`
   - 示例3
 
-  ![SSRF示例3](https://static-labs.tryhackme.cloud/sites/ssrf-examples/images/ssrf_3.png)
+    ![SSRF示例3](https://static-labs.tryhackme.cloud/sites/ssrf-examples/images/ssrf_3.png)
     - 该示例显示攻击者可以控制发出请求的服务器子域
     - 预期访问url`http://website.thm/stock?server=api&id=123`
       - 该请求到达服务器后，服务器根据`server=api`使用子域名`api.website.thm/api/stock/item?id=123`
     - 使用 `&x=` 阻止剩余路径附加到攻击者 URL 的末尾，而是将其转换为查询字符串中的参数 (?x=)。
   - 示例4
 
-  ![SSRF示例4](https://static-labs.tryhackme.cloud/sites/ssrf-examples/images/ssrf_4.png)
+    ![SSRF示例4](https://static-labs.tryhackme.cloud/sites/ssrf-examples/images/ssrf_4.png)
     - 与示例1类似，攻击者可以改为强制网络服务器请求攻击者选择的服务器。
     - 通过这样做，我们可以捕获发送到攻击者指定域的请求标头。 
     - 这些标头可能包含由 website.thm 发送的身份验证凭据或 API 密钥（通常会向 api.website.thm 进行身份验证）
@@ -323,7 +323,7 @@
   - DOM
     - DOM指文件对象模型，是HTML和XML文档的编程接口。
 
-    ![HTML DOM 的图表](https://tryhackme-images.s3.amazonaws.com/user-uploads/5efe36fb68daf465530ca761/room-content/24a54ac532b5820bf0ffdddf00ab2247.png)
+    ![HTML DOM 的图表](image/HTMLDOM%E7%9A%84%E5%9B%BE%E8%A1%A8.png)
   - 基于 DOM 的 XSS 是 JavaScript 直接在浏览器中执行的地方，无需加载任何新页面或将数据提交给后端代码。
   - 当网站 JavaScript 代码作用于输入或用户交互时执行。
 - Blind XSS
@@ -826,7 +826,7 @@
 - Spoofing and Decoys(欺骗和诱饵)
   - 欺骗
     - `nmap -S SPOOFED_IP MACHINE_IP`
-    ![nmap 欺骗](https://tryhackme-images.s3.amazonaws.com/user-uploads/5f04259cf9bf5b57aed2c476/room-content/45b982d501fd26deb2b381059b16f80c.png)
+    ![nmap 欺骗](image/nmap%E6%AC%BA%E9%AA%97.png)
     1. 攻击者向目标机器发送一个带有欺骗性源 IP 地址的数据包
     2. 目标机器回复欺骗性 IP 地址作为目的地
     3. 攻击者捕获回复以找出打开的端口  
