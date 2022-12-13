@@ -585,6 +585,460 @@
   - 用户输入验证
   - 转义用户输入
 
-## Burp Suite
-### Burp Suite: The Basics
-- 
+## [Burp Suite]()
+- 只记录技巧
+
+## 网络安全
+### 被动侦察
+- 介绍
+  - 在这个模块，在我们定义了被动侦察和主动侦察之后，我们将重点介绍与被动侦察相关的基本工具。
+  - 我们将学习三个命令行工具：
+    - `whois` 查询 WHOIS 服务器
+    - `nslookup` 查询DNS服务器
+    - `dig` 查询DNS服务器
+- 被动侦察和主动侦察
+  - 被动侦察。无需直接与目标接触即可从公开可用资源中获取这些知识。
+  - 常见活动
+    - 从公共 DNS 服务器查找域的 DNS 记录
+    - 检查与目标网站相关的招聘广告
+    - 阅读有关目标公司的新闻文章
+  - 主动侦察。主动侦察需要与目标直接接触。
+  - 常见活动
+    - 连接到公司服务器之一，例如 HTTP、FTP 和 SMTP
+    - 致电公司试图获取信息（社会工程学）
+    - 冒充修理工进入公司场所
+- whois
+  - `WHOIS` 是遵循 RFC 3912 规范的请求和响应协议, whois 服务器运行在TCP的43端口。
+  - `whois DOMAIN_NAME`
+    - `whois bilibili.com`
+- nslookup and dig
+  - 使用 `whois` 获得到了 Name Server
+    - 以tryhackme.com为例,得到 `Name Server: uma.ns.cloudflare.com`
+  - `nslookup`
+    - `nslookup OPTIONS DOMAIN_NAME SERVER`
+      - `OPTIONS` 查询类型
+      - `DOMAIN_NAME`  查询域名
+      - `SERVER`  dns服务器
+    - `nslookup -type=a tryhackme.com 8.8.8.8`
+  - `dig`
+    - `dig @SERVER DOMAIN_NAME TYPE`
+      - `SERVER` 是您要查询的 DNS 服务器
+      - `DOMAIN_NAME` 是您正在查找的域名
+      - `TYPE` 包含 DNS 记录类型
+    - `dig @1.1.1.1 tryhackme.com A`
+
+- [DNSDumpster](https://dnsdumpster.com/)
+  - 全面详细
+  - **子域名查找**
+- Shodan.io
+  - “钟馗之眼”
+  - [TryHackMe’s Shodan.io]()
+- 总结
+  - 介绍了命令行工具、whois、nslookup 和 dig
+  - 讨论了两个公开可用的服务 DNSDumpster 和 Shodan.io。
+    - 此类工具的强大之处在于，您可以在不直接连接目标的情况下收集有关目标的信息。
+    - 此外，一旦您掌握了搜索选项并习惯阅读结果，使用此类工具可能会发现大量信息。
+  - 扩展
+    - [DNS in detail](https://github.com/MasterandRoot/Learn-THM/blob/main/Pre%20Security/%E7%BD%91%E7%BB%9C%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C.md#dns%E8%AF%A6%E8%A7%A3)
+
+### 主动侦察
+- 介绍
+  - 介绍命令行工具
+    - `ping`
+    - `traceroute`
+    - `telent`
+    - `nc`
+  - 主动侦察始于与目标机器的直接连接
+    - 任何此类连接都可能在日志中留下信息，显示客户端 IP 地址、连接时间和连接持续时间等
+    - 但是，并非所有连接都是可疑的。可以让您的主动侦察显示为常规客户活动。
+    - 考虑网页浏览；在数百名其他合法用户中，没有人会怀疑浏览器连接到目标网络服务器。当你作为红队（攻击者）的一部分工作时，你可以使用这些技术来发挥你的优势，并且不想惊动蓝队（防御者）
+
+- Web浏览器
+  - 开发者模式
+  - 常用扩展
+    - **FoxyProxy**
+    - **User-Agent Switcher and Manager**
+    - **Wappalyzer** 提供所访问网站使用的相关技术
+
+- Ping
+- Traceroute
+  - 在Linux和 macOS 上，要使用的命令是 `traceroute MACHINE_IP`
+  - 在 MS Windows 上，它是 `tracert MACHINE_IP`
+- Telent
+  - `Telent MACHINE_IP PORT`
+  - 由于基于TCP协议，可以使用 Telnet 连接到任何服务
+- Netcat
+  - 类似于telent，支持UDP
+  - netcat as client	`nc MACHINE_IP PORT_NUMBER`
+  - netcat as server	`nc -lvnp PORT_NUMBER`
+
+
+## Nmap
+### Nmap Live Host Discovery
+- 了解如何使用 Nmap 通过 ARP 扫描、ICMP 扫描和 TCP/UDP ping 扫描发现活动主机。
+- 介绍
+  - 渗透第一步，需要了解目标的基本信息，主要包括以下两点：
+    1. 目标上运行的系统？
+    2. 系统上运行着哪些服务？
+  - Nmap 能够解决上述问题，本模块主要解决第一个问题
+- 子网
+  - 作为主动侦察的一部分，希望发现有关一组主机或子网的更多信息
+  - 如果连接到同一个子网，您会希望您的扫描器依赖 ARP（地址解析协议）查询来发现活动主机
+  - ARP 查询旨在获取硬件地址（MAC 地址），以便通过链路层进行通信；但是，我们可以使用它来推断主机在线
+  - 根据 ARP 协议可知，ARP 查询不能跨越子网
+  - [子网划分的更多信息](https://github.com/MasterandRoot/Learn-THM/blob/main/Pre%20Security/%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80.md#%E5%B1%80%E5%9F%9F%E7%BD%91%E4%BB%8B%E7%BB%8D)
+- 枚举目标
+  - 在扫描之前，需要指定要扫描的目标
+  - 一般来说，需要提供一个列表、范围、子网
+    - 列表list: `MACHINE_IP scanme.nmap.org example.com` 将会扫描 3 个IP地址
+    - 范围range: `10.11.12.15-20` 将会扫描 6 个IP地址: 10.11.12.15, 10.11.12.16,… 10.11.12.20
+    - 子网subnet: `MACHINE_IP/30` 将会扫描 4 个IP地址
+    - 还可以提供一个文件作为目标列表的输入，`nmap -iL list_of_hosts.txt`
+  - 如果要检查 Nmap 将扫描的主机列表，使用`nmap -sL TARGETS`. 此选项将为您提供 Nmap 将在不扫描的情况下扫描的主机的详细列表
+    - 然而，Nmap 将尝试对所有目标进行反向 DNS 解析以获取它们的名称，因为名字可能会向渗透测试者透露各种信息
+    - 如果不想让 Nmap 进行反向 DNS 解析，可以添加`-n`
+    - `nmap -sL -n 10.10.0-255.101-125` 扫描 6400 个IP地址（256 * 25)
+- 发现在线主机
+  - 根据TCP/IP协议分层，可以利用协议发现在线主机
+  - 自下而上，可以使用：
+    - 数据链路层 ARP
+    - 网络层 ICMP
+    - 传输层 TCP/UDP
+  - 回顾四种协议
+    - [ARP](https://github.com/MasterandRoot/Learn-THM/blob/main/Pre%20Security/%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80.md#%E5%B1%80%E5%9F%9F%E7%BD%91%E4%BB%8B%E7%BB%8D)
+      - 向网段上的广播地址发送一个帧，并要求具有特定 IP 地址的计算机通过提供其 MAC（硬件）地址来响应
+    - ICMP
+       - 多种类型
+       - ICMP ping 使用 Type 8 (Echo) 和 Type 0 (Echo Reply)
+    - TCP/UDP
+      - 虽然 TCP 和 UDP 是传输层，但出于网络扫描的目的，扫描器可以将特制的数据包发送到常见的 TCP 或 UDP 端口，以检查目标是否会响应
+      - 这种方法很有效，尤其是当 ICMP Echo 被阻止时
+- 使用 ARP 的Nmap主机发现
+  - 避免浪费时间对离线主机或未使用的 IP 地址进行端口扫描至关重要。
+  - 有多种方法可以发现在线主机。当没有提供主机发现选项时，Nmap 遵循以下方法来发现活动主机：
+    - 当特权用户尝试扫描本地网络（以太网）上的目标时，Nmap 使用ARP 请求
+    - 当特权用户试图扫描本地网络之外的目标时，Nmap 使用 ICMP 回显请求、TCP ACK（确认）到端口 80、TCP SYN（同步）到端口 443 和 ICMP 时间戳请求
+    - 当非特权用户尝试扫描本地网络之外的目标时，Nmap 通过向端口 80 和 443 发送 SYN 数据包来求助于 TCP 3 次握手
+  - 默认情况，Nmap 使用 `Ping` 查找在线主机，然后仅扫描在线主机的端口。
+  - 如果只想发现在线主机而不进行端口扫描，使用`namp -sn TARGETS`
+
+  - 如果与目标在同一个子网里才可以进行ARP扫描
+  - 示例 `nmap -PR -sn MACHINE_IP/24`
+    - `-PR` 表示使用ARP扫描
+  - `arp-scan` 扫描器
+    - 使用`arp-scan -l`，扫描本地网络的所有有效IP
+    - 使用`arp-scan -I eth0 -l`，指定使用网卡接口
+- 使用 ICMP 的Nmap主机发现
+  - ping 目标网络的所有IP 
+  - 筛选出使用ping reply (ICMP Type 0) 回复我们请求ping (ICMP Type 8/Echo) 请求的主机 
+  - 使用 `nmap -PE -sn MACHINE_IP/24`
+  - 大多数现代防火墙对ICMP协议进行了限制
+    - `-PE` 回显请求往往被阻止
+    - `-PP` 使用时间戳请求（ICMP Type 13）并检查它是否会收到时间戳回复（ICMP Type 14）
+    - `-PM`使用地址掩码查询（ICMP Type 17）并检查它是否收到地址掩码回复（ICMP Type 18）
+- 使用TCP 和 UDP 的 Nmap 主机发现
+  - TCP SYN Ping
+    - 使用`-PS`
+    - `nmap -PS -sn MACHINE_IP/24`
+      - 参数`-PS21-25`,将目标定为21,22,23,24,25
+      - 参数`-PS80,443,8080`,将目标定为80,443,8080
+  - TCP ACK Ping
+    - 使用`-PA`
+  - UDP Ping
+    - 使用`-PU`
+- 总结
+  - `-n` 无DNS查询
+  - `-R` 所有主机进行DNS反差
+  - `-sn` 仅主机发现
+
+### 端口扫描基础
+- TCP 和 UDP 端口
+  - Nmap对端口的 **6** 种状态
+    - **Open**
+    - **Closed**
+    - **Filtered**: 无法确定，因为端口无法访问
+    - **Unfiltered**: 无法确定端口是打开还是关闭，尽管端口是可访问的
+    - **Open|Filtered**: 无法确定端口是打开还是过滤
+    - **Closed|Filtered**: 无法决定端口是关闭还是过滤
+- TCP Flags
+  - TCP 标头是 TCP 段的前 24 个字节
+  - TCP [Flags](https://github.com/MasterandRoot/Learn-THM/blob/main/Pre%20Security/%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80.md#%E6%95%B0%E6%8D%AE%E5%8C%85packet%E5%92%8C%E5%B8%A7frame)
+- TCP Connect Scan
+  - TCP Connect Scan通过完成 TCP 3 次握手来工作
+  - 在标准的 TCP 连接建立中，客户端发送一个设置了 SYN 标志的 TCP 数据包，如果端口打开，服务器以 SYN/ACK 响应；最后，客户端通过发送 ACK 完成 3 次握手
+  - 使用 `Nmap -sT`
+- TCP SYN Scan
+  - SYN 扫描不需要完成TCP 3次握手
+  - 相反，它会在收到服务器的响应(SYN/ACK)后断开连接。因为我们没有建立 TCP 连接，所以这减少了扫描被记录的机会
+  - 使用 `Nmap -sS`
+-  UDP Scan
+  - UDP是一种无连接协议，因此它不需要任何握手来建立连接。
+  - 我们不能保证侦听 UDP 端口的服务会响应我们的数据包。但是，如果将 UDP 数据包发送到关闭的端口，则会返回 ICMP 端口不可达错误(type 3, code 3)
+  - 使用 `Nmap -sU`
+- 微调端口和性能
+  - 调整扫描端口
+    - `-p22,80,443` 扫描22，80，443端口
+    - `-p1-1023`
+    - `-p-` 所有端口
+    - `-F` 最常用的100个端口
+    - `--top-ports 10` 最常用的10个端口
+  - 扫描时间
+    - 使用 `-T<0-5>`
+    - Nmap 默认使用`-T3`
+    - CTF中常使用`-T4`
+    - 真实交战中使用`-T1`
+  - 数据包发送效率
+    - `--min-rate <number>`
+    - `--max-rate <number>`
+      - `--max-rate 10` `--max-rate=10`
+  - 并发
+    - `--min-parallelism <numprobes>` 
+    - `--max-parallelism <numprobes>`
+      - `--min-parallelism=512` 
+### 高级端口扫描
+- 掌握高级扫描，例如 null、FIN、Xmas 和空闲（僵尸）扫描、欺骗，以及 FW 和 IDS 规避
+- TCP Null Scan, FIN Scan, and Xmas Scan
+  - Null Scan
+    - 使用 `-sN`
+    - 空扫描依赖于没有响应来推断端口开启。所以它不能确定这些端口是打开的还是由于防火墙规则导致端口没有响应
+  - FIN Scan
+    - 使用 `-sF`
+    - FIN 扫描也依赖于没有响应来推断端口开启
+  - 圣诞 Scan
+    - 使用 `-sX`
+    - FIN, PSH, URG 置 1
+    - 也依赖于没有响应来推断端口开启
+- TCP Maimon Scan
+  - 目前已经失效
+  - FIN, ACK 置1
+- TCP ACK, Window, and Custom Scan
+  - ACK 扫描和 Window 扫描在帮助扫描**防火墙规则**方面非常有效
+  - 然而，重要的是要记住，仅仅因为防火墙没有阻止特定端口，并不一定意味着服务正在侦听该端口。例如，可能需要更新防火墙规则以反映最近的服务更改
+  - 因此，ACK 和 Window 扫描暴露了防火墙规则，而不是服务
+  - TCP ACK扫描
+    - 使用 `-sA`
+    - ACK 置 1
+  - Window扫描
+    - 使用 `-sW`
+  - Custom(自定义) 扫描
+    - 使用 `--scanflags`
+      - 想同时设置 SYN、RST 和 FIN，使用 `--scanflags RSTSYNFIN`
+- Spoofing and Decoys(欺骗和诱饵)
+  - 欺骗
+    - `nmap -S SPOOFED_IP MACHINE_IP`
+    ![nmap 欺骗](https://tryhackme-images.s3.amazonaws.com/user-uploads/5f04259cf9bf5b57aed2c476/room-content/45b982d501fd26deb2b381059b16f80c.png)
+    1. 攻击者向目标机器发送一个带有欺骗性源 IP 地址的数据包
+    2. 目标机器回复欺骗性 IP 地址作为目的地
+    3. 攻击者捕获回复以找出打开的端口  
+    - 攻击者与目标机器位于同一子网时，也可以伪装MAC地址。
+      - 使用 `--spoof-mac SPOOFED_MAC`
+  - 诱饵
+    - 欺骗仅在满足特定条件的极少数情况下有效。
+    - 因此，攻击者可能会求助于使用诱饵来使其更难被精确定位
+    - `nmap -D 10.10.0.1,10.10.0.2,RND,RND,ME MACHINE_IP`
+      - `-D`
+      - `ME` 攻击者
+      - `RND` 随机
+- 碎片化
+  - 如何才能降低传统防火墙/IDS 检测到您的 Nmap 活动的可能性？分片。
+  - `nmap -sS -p80 -f 10.20.30.144`
+    - `-f` 8字节
+    - `-ff` 16字节
+-  Idle/Zombie Scan(空闲/僵尸扫描)
+  - 欺骗需要特殊的网络设置，需要可以监控流量。
+  - 正因如此，欺骗 IP 地址几乎没有用处；但是，我们可以通过空闲扫描来实现相关需求。
+  - `nmap -sI ZOMBIE_IP MACHINE_IP`
+    - `ZOMBIE_IP` 是空闲主机的 IP 地址
+  - 步骤
+    1. 触发空闲主机响应，可以记录空闲主机当前的IP ID
+    2. 将 SYN 数据包发送到目标上的TCP端口。该数据包使用欺骗，欺诈IP是空闲主机（僵尸）的 IP 地址
+    3. 再次触发空闲机器响应，将新的 IP ID 与之前收到的 IP ID 进行比较
+  - 示例
+    - 存在一台空闲的设备。
+    1. 攻击者首先发送 SYN/ACK 到空闲的设备，空闲设备回复 RST, 其中存在IP ID
+    2. 攻击者将发送一个 SYN 到目标机器上查看的TCP端口。
+    3. 此数据包将使用空闲主机（僵尸）IP 地址作为源，会出现三种情况。
+       - 在第一种情况下，TCP端口是关闭的，目标机器用 RST 数据包响应空闲主机。空闲主机无响应；因此它的 IP ID 不会增加
+       - 在第二种情况下，TCP端口是打开的，目标机器用 SYN/ACK 数据包响应空闲主机。空闲 RST 数据包响应；因此它的 IP ID 增加
+       - 在第三种情况下，由于防火墙规则，目标机器根本不响应。缺乏响应将导致与关闭端口相同的结果，空闲主机不会增加IP ID
+    4. 最后攻击者向空闲主机发送另一个 SYN/ACK。空闲主机以 RST 数据包响应，再次将 IP ID 递增 1
+    5. 攻击者需要将第一步收到的 RST 数据包的 IP ID 与第三步收到的 RST 数据包的 IP ID 进行比较。如果差异为 1，则表示目标机器上的端口已关闭或被过滤。但是，如果差异为 2，则表示目标上的端口已打开
+  - 注意
+    - 这种扫描称为空闲扫描，因为选择空闲主机对于扫描的准确性是必不可少的。如果“空闲主机”很忙，则所有返回的 IP ID 都将无用
+- 扫描细节
+  - `-v`
+  - `--reason` 给出判断的端口打开的原因
+### Nmap Post Port Scans
+- 了解如何利用 Nmap 进行服务和操作系统检测、使用 Nmap 脚本引擎 (NSE)
+- 服务检测
+  - `-sV` Nmap将检测确定开放端口的服务和版本信息
+    - 控制强度
+      - `-sV --version-light` 强度为2
+      - `-sV --version-all` 强度为9 
+    - `-sV` 将强制完成 TCP 3次握手
+    - `nmap -sV MACHINE_IP`
+- 操作系统检测
+  - `-O` 准确性不高
+- 跟踪路由
+  - `nmap -sS --traceroute MACHINE_IP`
+- Nmap 脚本引擎(NSE)
+  - Nmap 默认包含600+个脚本，`/usr/share/nmap/scripts`
+  - 使用默认脚本
+    - `--script=default`
+    - `-sC`
+    - 默认脚本
+  - 使用脚本
+    - `--script "SCRIPT-NAME"`
+- `-A`
+  - 相当于 `-sV -O -sC --traceroute`
+### 协议和服务
+- 介绍
+  - 分析常见协议
+  - `HTTP` `FTP` `POP3` `SMTP` `IMAP` `Telnet`
+- Telent
+  - 应用层协议，用于连接另一台设备的虚拟终端
+  - 使用Telent，用户可以登陆到另一台设备并访问终端
+  - 协议全程明文传输，安全性较差
+  - 运行在 23 端口
+- HTTP
+- FTP
+  - 监听在 21 端口
+    - 主动模式，使用 20 端口进行数据传输
+    - 被动模式，使用端口是客户端与服务器端协商决定
+  - FTP 使用明文传递数据，极易受到攻击
+- 电子邮件
+  - 基本组件
+    1. Mail Submission Agent (MSA)
+    2. Mail Transfer Agent (MTA)
+    3. Mail Delivery Agent (MDA)
+    4. Mail User Agent (MUA)
+  - 基本流程
+    1. MUA --> MSA
+        - 邮件用户代理 (MUA)，或简称为电子邮件客户端，有一封电子邮件要发送。MUA 连接到邮件提交代理 (MSA) 以发送其消息
+        - **使用 SMTP 协议**
+    2. MSA --> MTA
+        - MSA 接收邮件，检查是否有任何错误，然后再将其传输到通常托管在同一服务器上的邮件传输代理 (MTA) 服务器
+    3. MTA --> MTA(收件人)
+        - MTA 会将电子邮件发送给收件人的 MTA。MTA 还可以充当邮件提交代理 (MSA)
+        - **使用 SMTP 协议**
+    4. MTA(收件人) --> MDA
+        - 典型的设置将使 MTA 服务器也充当邮件投递代理 (MDA)
+    5. MDA --> MUA(收件人)
+        - 收件人将使用他们的电子邮件客户端从 MDA 收集电子邮件
+        - **使用 POP3/IMAP 协议**
+  - 常见协议
+    - SMTP
+    - POP3
+    - IMAP
+- SMTP
+  - SMTP 默认侦听 25 端口
+  - 主要用于与 MTA 服务器通信
+  - SMTP 使用明文传输，使用基本的 Telnet 客户端连接到 SMTP 服务器并充当电子邮件客户端 (MUA) 发送消息
+  ![SMTP](https://images2017.cnblogs.com/blog/1120165/201710/1120165-20171012221431465-177661745.png)
+- POP3
+  - 用于从 MDA 下载电子邮件的协议
+  - 默认侦听 110 端口
+  ![SMTP](https://images2017.cnblogs.com/blog/1120165/201710/1120165-20171012231717027-556986943.png)
+  - 使用 Telnet 登录，`USER frank`和 `PASS D2xc9CgD` 进行身份验证
+    - `STAT`
+      - 响应 `+OK nn mm`
+      - `nn` 收件箱电子邮件数量
+      - `mm` 以八位字节（字节）为单位的收件箱大小
+    - `LIST`
+    - `RETR 1` 检索第一条消息
+  - 邮件客户端 (MUA) 将连接到 POP3 服务器 (MDA)、验证并下载邮件
+  - 虽然使用 POP3 协议的通信将隐藏在 UI 后面，但会发出类似的命令，如上面的 Telnet 会话
+  - 根据默认设置，邮件客户端在下载邮件消息后 MDA 会将其删除
+    - 如果希望从另一个邮件客户端再次下载电子邮件，可以从邮件客户端设置更改默认行为
+    - 使用 POP3 通过多个客户端访问同一个邮件帐户通常不是很方便，因为会丢失已读和未读邮件
+    - 要保持所有邮箱同步，我们需要考虑其他协议，例如 IMAP
+- IMAP 
+  - IMAP 默认侦听 143 端口
+  - 明文传输
+- 小结
+  - 上述协议的服务器会受到不同类型的攻击
+    - 嗅探攻击
+    - 中间人 (MITM) 攻击
+    - 密码攻击(认证攻击)
+    - 漏洞
+  - CIA 三要素
+- 嗅探攻击
+  - 嗅探攻击是指使用网络数据包捕获工具来收集有关目标的信息
+  - 当协议以明文形式通信时，交换的数据可以由第三方捕获以进行分析
+  - 如果数据在传输过程中未加密，则简单的网络数据包捕获可以揭示信息，例如私人消息的内容和登录凭据
+    1. Tcpdump 是一个免费的开源命令行界面 (CLI) 程序，已被移植到许多操作系统上
+    2. Wireshark 是一个免费的开源图形用户界面 (GUI) 程序，可用于多种操作系统，包括Linux、macOS 和 MS Windows
+    3. Tshark 是 Wireshark 的 CLI 替代品
+  - `tcpdump port 110 -A -i tun0`
+    - `-A` ascii 格式显示捕获的数据包
+- 中间人(MITM)攻击
+  - `Ettercap`
+  - **`Bettercap`**
+- 传输层安全(TLS)
+  - 一种标准解决方案来保证数据包的机密性和完整性。
+  - 以下方法可以防止密码嗅探和MITM攻击
+    - SSL（安全套接字层）
+    - TLS（传输层安全）
+  - 实际上 TLS 已经取代了 SSL,但术语 SSL 仍在广泛使用
+  - 但是，我们可以期待所有服务器都使用 TLS
+    | 协议 | 默认端口 | 安全协议 | 使用 TLS 的默认端口 |
+    |------|----------|----------|---------------------|
+    | HTTP |    80    |   HTTPS  |         443         |
+    |  FTP |    21    |   FTPS   |         990         |
+    | SMTP |    25    |   SMTPS  |         465         |
+    | POP3 |    110   |   POP3S  |         995         |
+    | IMAP |    143   |   IMAPS  |         993         |
+  - 以 HTTPS 为例
+    - 基本的 HTTP
+      1. 与远程 Web 服务器建立TCP连接
+      2. 向Web服务器发送HTTP请求，如 `GET`
+    - HTTPS
+      - 需要有额外的步骤
+      - 在建立 TCP 连接之后和发送 HTTP 请求之前
+      1. 建立TCP连接
+      2. **建立 SSL/TLS 连接**
+      3. 向Web服务器发送HTTP请求
+      - 建立 SSL/TLS 连接
+        1. 客户端向服务器发送 ClientHello 以表明自身功能状态，例如支持的算法
+        2. 服务器用 ServerHello 响应，指示选定的连接参数
+        3. 发送 ServerHelloDone 消息以指示协商已完成。它可能会在其 ServerKeyExchange 消息中发送生成主密钥所需的其他信息
+        4. 客户端响应 ClientKeyExchange，其中包含生成主密钥所需的附加信息。此外，它切换到使用加密并使用 ChangeCipherSpec 消息通知服务器
+        5. 服务器也切换为使用加密并在 ChangeCipherSpec 消息中通知客户端
+        ![SSL/TLS](https://tryhackme-images.s3.amazonaws.com/user-uploads/5f04259cf9bf5b57aed2c476/room-content/ea654470ae699d10e9c07bd11a8320ac.png)
+- Secure Shell (SSH)
+  - 注：tryhackme 的 SSH 可能要调整 VPN 的 mtu
+  - SCP 基于SSH的文件传输
+    - `scp mark@IP:/home/mark/archive.tar.gz ~` 下载文件到本地
+    - `scp backup.tar.bz2 mark@IP:/home/mark/`  上传文件到远程
+- 密码攻击
+  - `hydra -l username -P wordlist.txt server service`
+  - 举例
+    - `hydra -l mark -P /usr/share/wordlists/rockyou.txt 10.10.108.78 ftp`
+    - `hydra -l mark -P /usr/share/wordlists/rockyou.txt 10.10.108.78 ftp`
+    - `hydra -l frank -P /usr/share/wordlists/rockyou.txt 10.10.108.78 ssh`
+  - 可选参数
+    - `-s` 选择非默认端口
+    - `-t` 并发数
+  - 抵御策略
+    - 密码策略：对用户设置的密码实施最低复杂性限制
+    - 帐户锁定：在一定次数的失败尝试后锁定帐户
+    - 限制身份验证尝试：延迟对登录尝试的响应。对于知道密码的人来说，几秒钟的延迟是可以容忍的，但它们会严重阻碍自动化工具
+    - 使用验证码：需要解决机器难以解决的问题。如果登录页面是通过图形用户界面 (GUI) 进行的，则效果很好
+    - 要求使用公共证书进行身份验证。例如，这种方法适用于 SSH。
+    - 双因素身份验证：要求用户提供可通过其他方式获得的代码，例如电子邮件、智能手机应用程序或短信。
+    - 还有许多其他方法更复杂或可能需要一些关于用户的既定知识，例如基于 IP 的地理定位。
+### 实践补充
+- Telnet
+  - `Telnet IP 80`
+    - `GET / HTTP/1.1`
+    - `host:/*hostname*/`
+
+
+
+
+
+
+
+
+
+
