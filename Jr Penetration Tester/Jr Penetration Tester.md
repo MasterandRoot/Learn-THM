@@ -114,7 +114,7 @@
   - Sublist3r 是一个 python 工具，旨在使用 OSINT 枚举网站的子域。它帮助渗透测试人员和漏洞猎手收集和收集他们所针对的域的子域。
 - 虚拟主机
   - ffuf 
-    - `fuf -w /usr/share/wordlists/SecLists/Discovery/DNS/namelist.txt -H "Host: FUZZ.acmeitsupport.thm" -u http://MACHINE_IP` 
+    - `ffuf -w /usr/share/wordlists/SecLists/Discovery/DNS/namelist.txt -H "Host: FUZZ.acmeitsupport.thm" -u http://MACHINE_IP` 
 
 
 ### 绕过验证
