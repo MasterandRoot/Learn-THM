@@ -83,5 +83,46 @@ factor=$2
 - `&&` 前一句结果执行成功，下一句才会执行
 - `||` 前一句执行失败，才会执行
 
+### for 循环
+```bash
+#!/bin/bash
+# 方式一
+#This is the basic example of 'for loop'.  
 
+learn="hello world hello bash"  
+
+for learn in $learn  
+do  
+echo $learn  
+done  
+
+# 输出为:
+# hello 
+# world
+# hello
+# bash
+
+# 方式二
+# 打印从 1 到 10 的一系列数字的基本示例
+
+for num in {1..10}  
+do  
+echo $num  
+done  
+
+# 方式三
+# 递增
+for num in {1..10..1}  
+do  
+echo $num  
+done
+
+# 递减
+for num in {10..0..2}  
+do  
+echo $num  
+done
+
+# 还有 break、continue ，现用现查
+```
 
