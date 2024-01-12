@@ -71,4 +71,40 @@
 10. [服务器端请求伪造（SSRF）](https://github.com/MasterandRoot/Learn-THM/blob/main/Jr%20Penetration%20Tester/Jr%20Penetration%20Tester.md#ssrf)
 
 ##### OWASP Juice Shop
-  -  
+  - 日后专题学习
+##### 漏洞上传(Upload Vulnerabilities)
+  - 学习重点
+    - 覆盖服务器上的现有文件
+    - 在服务器上上传并执行 Shell
+    - 绕过客户端过滤
+    - 绕过各种服务器端过滤
+    - 欺骗内容类型验证检查
+  - 覆盖现有文件
+  - 远程代码执行(在服务器上上传并执行 Shell)
+    - 使用 Gobuster 遍历网站目录，找到上传的文件所在的位置
+    - 上传 payloads
+    - 获得反向 shell
+  - 过滤
+    - 扩展名验证过滤
+    - 文件类型过滤
+      - MIME 验证
+  
+        ![MIME](./image/MIME.png)
+        
+        - MIME 类型遵循格式 `<type>/<subtype> `
+      - 幻数验证
+    - 文件长度过滤
+      - 在管理良好的系统上，我们上传的文件不太可能与我们在上传之前指定的名称相同
+    - 文件名过滤
+  - 基本步骤 — 挑战
+    1. 检索网站。使用 Gobuster 遍历网站目录，发现 **/content** 、 **/admin** 等目录
+    2. 找到上传文件位置。上传正常文件，使用 Gobuster 遍历，利用题目给出的字典，发现文件上传进 **/content** 目录下
+       - `-x` 参数，规定后缀  例子: `-x jpg,php`
+         - `gobuster dir -u http://jewel.uploadvulns.thm -w ./UploadVulnsWordlist.txt -x jpg`
+    3. 查验客户端过滤。发现 **upload.js**对上传文件进行客户端过滤，过滤文件大小、文件后缀、文件幻数。使用burpsuite拦截修改该文件
+    4. 查验服务端过滤。通过更改后缀名上传、更改幻数上传、更改MIME类型上传，发现使用MIME类型过滤，使用burpsuite拦截修改后上传
+    5. 上传反向shell。经wappalyzer发现网页使用node.js，上传 node.js 的反向shell
+
+### 密码学
+##### John the Ripper 
+  - John the Ripper 是最著名、最受欢迎且用途广泛的哈希破解工具之一。它结合了快速的破解速度和广泛的兼容哈希类型
