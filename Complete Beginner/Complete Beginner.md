@@ -107,4 +107,38 @@
 
 ### 密码学
 ##### John the Ripper 
-  - John the Ripper 是最著名、最受欢迎且用途广泛的哈希破解工具之一。它结合了快速的破解速度和广泛的兼容哈希类型
+  - John the Ripper 是最著名、最受欢迎且用途广泛的哈希破解工具之一。它结合了快速的破解速度和广泛的兼容哈希类型。
+
+### Windows 漏洞利用基础知识
+##### Active Directory 基础
+  - Windows 域
+    - 想象一下您正在管理一个只有五台计算机和五名员工的小型企业网络。在如此小的网络中，您可能能够毫无问题地单独配置每台计算机。您将手动登录每台计算机，为使用它们的人员创建用户，并为每个员工的帐户进行特定配置。如果用户的计算机停止工作，您可能会去他们的地方并现场修复计算机
+    - 虽然这听起来像是非常轻松的管理方式，但让我们假设您的业务突然增长，现在拥有 157 台计算机和分布在四个不同办公室的 320 名不同用户。您是否仍然能够将每台计算机作为单独的实体进行管理，为网络上的每个用户手动配置策略并为每个人提供现场支持？答案很可能是否定的
+    - 为了克服这些限制，我们可以使用 Windows 域
+    - 简而言之，Windows 域是给定企业管理下的一组用户和计算机。域背后的主要思想是在称为Active Directory (AD)的单个存储库中集中管理 Windows 计算机网络的常见组件
+    - 运行 Active Directory 服务的服务器称为 **域控制器 (DC)**
+  - 具体组成
+    - Users
+      - 用户是安全主体之一，可分为两类
+        - People
+        - Services
+    - Machine
+    - Security Groups(安全组)
+    - Organizational Units (OUs)
+  - 管理 AD 中的用户
+    - Delegation(委托)
+      - 委托用户管理OU
+      - `Set-ADAccountPassword **sophie** -Reset -NewPassword (Read-Host -AsSecureString -Prompt 'New Password') -Verbose`
+  - 管理 AD 中的计算机
+    - 虽然不是必须，但仍建议把计算机按照实际进行分类，方便为服务器和普通用户日常使用的计算机制定不同的策略
+  - Group Policy Objects (组策略对象)
+    - 组策略分发
+      - GPOs 通过称为 SYSVOL 的共享文件夹分发到网络
+      - 域中的所有用户通常都有权通过网络访问此共享，以定期同步其 GPO
+      - 默认情况下，SYSVOL 共享指向 `C:\Windows\SYSVOL\sysvol\` 目录
+      - 对任何 GPO 进行更改后，计算机可能需要长达 2 小时才能同步。强制更新同步 `PS C:\> gpupdate /force`
+  - 登录认证方式
+    - 两种认证方式
+      - Kerberos：AD使用的默认协议
+      - NetNTLM：出于兼容性目的而保留的旧身份验证协议
+  - 树、林、信任关系
